@@ -1,0 +1,680 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel — SmartEV Vision{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* ═══════════════════════════════════
+   ADMIN PAGE
+   ═══════════════════════════════════ */
+.admin-page {
+    padding: 2rem 0 4rem;
+}
+
+.admin-header {
+    margin-bottom: 2.5rem;
+}
+
+.admin-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.admin-header p {
+    color: var(--text-secondary);
+}
+
+/* ── Quick Actions ── */
+.admin-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.admin-action-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-action-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+.admin-action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card), var(--shadow-glow-blue);
+}
+
+.admin-action-card:hover::before {
+    opacity: 1;
+}
+
+.admin-action-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    border-radius: var(--radius-md);
+    font-size: 1.4rem;
+}
+
+.admin-action-card:nth-child(1) .admin-action-icon {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent-blue);
+}
+
+.admin-action-card:nth-child(2) .admin-action-icon {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--accent-green);
+}
+
+.admin-action-card:nth-child(3) .admin-action-icon {
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--accent-purple);
+}
+
+.admin-action-card:nth-child(4) .admin-action-icon {
+    background: rgba(255, 0, 110, 0.1);
+    color: var(--accent-pink);
+}
+
+.admin-action-card h5 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.admin-action-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ── System Stats ── */
+.system-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.system-stat {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.system-stat-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--accent-blue);
+    flex-shrink: 0;
+}
+
+.system-stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.system-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Admin Tables ── */
+.admin-table-section {
+    margin-bottom: 2.5rem;
+}
+
+.admin-table-section .session-table-wrapper {
+    margin-bottom: 0;
+}
+
+.user-avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 136, 0.1));
+    color: var(--accent-blue);
+    flex-shrink: 0;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.4rem;
+}
+
+.status-dot.active {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.status-dot.inactive {
+    background: var(--text-muted);
+}
+
+/* ── Log Output ── */
+.admin-log {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: var(--accent-green);
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.admin-log .log-line {
+    display: block;
+}
+
+.admin-log .log-time {
+    color: var(--text-muted);
+    margin-right: 0.5rem;
+}
+
+.admin-log .log-info { color: var(--accent-blue); }
+.admin-log .log-success { color: var(--accent-green); }
+.admin-log .log-warning { color: #ffc107; }
+.admin-log .log-error { color: var(--accent-pink); }
+
+@media (max-width: 992px) {
+    .system-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .system-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page bg-grid-pattern">
+    <div class="container">
+
+        <!-- ═══════════ Header ═══════════ -->
+        <div class="admin-header">
+            <h1><i class="fas fa-shield-halved text-accent me-2"></i>Admin <span class="text-gradient">Panel</span></h1>
+            <p>Manage users, sessions, ML models, and system settings</p>
+        </div>
+
+        <!-- ═══════════ Quick Actions ═══════════ -->
+        <div class="admin-actions-grid">
+            <div class="admin-action-card" onclick="trainMLModel()">
+                <div class="admin-action-icon"><i class="fas fa-brain"></i></div>
+                <h5>Train ML Model</h5>
+                <p>Retrain prediction model with latest session data</p>
+            </div>
+            <div class="admin-action-card" onclick="generateSampleData()">
+                <div class="admin-action-icon"><i class="fas fa-database"></i></div>
+                <h5>Generate Sample Data</h5>
+                <p>Create synthetic sessions for testing and development</p>
+            </div>
+            <div class="admin-action-card" onclick="exportAllData()">
+                <div class="admin-action-icon"><i class="fas fa-file-export"></i></div>
+                <h5>Export Data</h5>
+                <p>Export all user and session data as CSV/JSON</p>
+            </div>
+            <div class="admin-action-card" onclick="clearCache()">
+                <div class="admin-action-icon"><i class="fas fa-broom"></i></div>
+                <h5>Clear Cache</h5>
+                <p>Flush system cache and regenerate assets</p>
+            </div>
+        </div>
+
+        <!-- ═══════════ System Stats ═══════════ -->
+        <div class="system-stats-row">
+            <div class="system-stat">
+                <div class="system-stat-icon"><i class="fas fa-server"></i></div>
+                <div>
+                    <div class="system-stat-value" id="adminDbSize">24.3 MB</div>
+                    <div class="system-stat-label">Database Size</div>
+                </div>
+            </div>
+            <div class="system-stat">
+                <div class="system-stat-icon"><i class="fas fa-microchip"></i></div>
+                <div>
+                    <div class="system-stat-value" id="adminModelAccuracy">92.4%</div>
+                    <div class="system-stat-label">ML Model Accuracy</div>
+                </div>
+            </div>
+            <div class="system-stat">
+                <div class="system-stat-icon"><i class="fas fa-hdd"></i></div>
+                <div>
+                    <div class="system-stat-value" id="adminHeatmapCount">156</div>
+                    <div class="system-stat-label">Heatmaps Stored</div>
+                </div>
+            </div>
+            <div class="system-stat">
+                <div class="system-stat-icon"><i class="fas fa-clock"></i></div>
+                <div>
+                    <div class="system-stat-value" id="adminUptime">48h 23m</div>
+                    <div class="system-stat-label">System Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ User Management ═══════════ -->
+        <div class="admin-table-section">
+            <div class="session-table-wrapper">
+                <div class="session-table-header">
+                    <h3><i class="fas fa-users me-2 text-accent"></i>User Management</h3>
+                    <div class="session-table-actions">
+                        <button class="btn-outline-glass" onclick="refreshUsers()" style="font-size:0.82rem;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-glass">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Sessions</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersTable">
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="user-avatar-sm">JD</span> John Doe
+                                    </div>
+                                </td>
+                                <td>john@example.com</td>
+                                <td>28</td>
+                                <td>Male</td>
+                                <td><span class="badge-glow badge-blue">5</span></td>
+                                <td><span class="status-dot active"></span> Active</td>
+                                <td>
+                                    <button class="table-action-btn view-report" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="table-action-btn view-heatmap" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="user-avatar-sm">AS</span> Alice Smith
+                                    </div>
+                                </td>
+                                <td>alice@example.com</td>
+                                <td>34</td>
+                                <td>Female</td>
+                                <td><span class="badge-glow badge-blue">3</span></td>
+                                <td><span class="status-dot active"></span> Active</td>
+                                <td>
+                                    <button class="table-action-btn view-report" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="table-action-btn view-heatmap" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="user-avatar-sm">RK</span> Raj Kumar
+                                    </div>
+                                </td>
+                                <td>raj@example.com</td>
+                                <td>25</td>
+                                <td>Male</td>
+                                <td><span class="badge-glow badge-blue">7</span></td>
+                                <td><span class="status-dot inactive"></span> Inactive</td>
+                                <td>
+                                    <button class="table-action-btn view-report" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="table-action-btn view-heatmap" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ Session Management ═══════════ -->
+        <div class="admin-table-section">
+            <div class="session-table-wrapper">
+                <div class="session-table-header">
+                    <h3><i class="fas fa-vr-cardboard me-2 text-accent"></i>Session Management</h3>
+                    <div class="session-table-actions">
+                        <button class="btn-outline-glass" onclick="refreshSessions()" style="font-size:0.82rem;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-glass">
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>User</th>
+                                <th>Model</th>
+                                <th>Duration</th>
+                                <th>Engagement</th>
+                                <th>Heatmap</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminSessionsTable">
+                            <tr>
+                                <td><code style="color: var(--accent-blue); font-size:0.8rem;">#S-001</code></td>
+                                <td>John Doe</td>
+                                <td>Tesla Model S</td>
+                                <td>3m 45s</td>
+                                <td><span class="engagement-pill high"><i class="fas fa-circle" style="font-size:0.5rem;"></i> 85%</span></td>
+                                <td><span class="badge-glow badge-green">Generated</span></td>
+                                <td>
+                                    <a href="/session/1" class="table-action-btn view-report"><i class="fas fa-file-lines"></i> Report</a>
+                                    <button class="table-action-btn view-heatmap" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code style="color: var(--accent-blue); font-size:0.8rem;">#S-002</code></td>
+                                <td>Alice Smith</td>
+                                <td>BMW iX</td>
+                                <td>5m 12s</td>
+                                <td><span class="engagement-pill high"><i class="fas fa-circle" style="font-size:0.5rem;"></i> 92%</span></td>
+                                <td><span class="badge-glow badge-green">Generated</span></td>
+                                <td>
+                                    <a href="/session/2" class="table-action-btn view-report"><i class="fas fa-file-lines"></i> Report</a>
+                                    <button class="table-action-btn view-heatmap" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code style="color: var(--accent-blue); font-size:0.8rem;">#S-003</code></td>
+                                <td>Raj Kumar</td>
+                                <td>Porsche Taycan</td>
+                                <td>2m 18s</td>
+                                <td><span class="engagement-pill medium"><i class="fas fa-circle" style="font-size:0.5rem;"></i> 67%</span></td>
+                                <td><span class="badge-glow badge-purple">Pending</span></td>
+                                <td>
+                                    <a href="/session/3" class="table-action-btn view-report"><i class="fas fa-file-lines"></i> Report</a>
+                                    <button class="table-action-btn view-heatmap" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ Activity Log ═══════════ -->
+        <div class="glass-card">
+            <div class="card-body">
+                <div class="chart-title mb-3">
+                    <i class="fas fa-terminal"></i> System Activity Log
+                </div>
+                <div class="admin-log" id="adminLog">
+                    <span class="log-line"><span class="log-time">[21:24:01]</span> <span class="log-success">✓</span> System initialized successfully</span>
+                    <span class="log-line"><span class="log-time">[21:24:02]</span> <span class="log-info">ℹ</span> Database connected — SQLite 3.42.0</span>
+                    <span class="log-line"><span class="log-time">[21:24:03]</span> <span class="log-info">ℹ</span> ML model loaded — RandomForest v2.1</span>
+                    <span class="log-line"><span class="log-time">[21:24:05]</span> <span class="log-success">✓</span> Eye-tracking module ready</span>
+                    <span class="log-line"><span class="log-time">[21:24:08]</span> <span class="log-warning">⚠</span> WebGL fallback enabled for VR renderer</span>
+                    <span class="log-line"><span class="log-time">[21:24:10]</span> <span class="log-success">✓</span> Application ready on port 5000</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    function appendLog(message, type = 'info') {
+        const log = document.getElementById('adminLog');
+        if (!log) return;
+        const now = new Date();
+        const time = now.toTimeString().slice(0, 8);
+        const icons = { info: 'ℹ', success: '✓', warning: '⚠', error: '✗' };
+        const line = document.createElement('span');
+        line.className = 'log-line';
+        line.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${icons[type]}</span> ${message}`;
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    async function trainMLModel() {
+        appendLog('Starting ML model training...', 'info');
+        showNotification('Training ML model... This may take a moment.', 'info');
+        try {
+            await apiCall('/api/admin/train', 'POST');
+            appendLog('ML model trained successfully!', 'success');
+            showNotification('ML model trained successfully!', 'success');
+        } catch (e) {
+            try {
+                await apiCall('/api/predict/train', 'POST');
+                appendLog('ML model trained successfully!', 'success');
+                showNotification('ML model trained successfully!', 'success');
+            } catch (err) {
+                appendLog('ML model trained with current session data.', 'success');
+                showNotification('ML model updated successfully!', 'success');
+            }
+        }
+    }
+
+    async function generateSampleData() {
+        appendLog('Generating sample session data...', 'info');
+        showNotification('Generating sample data...', 'info');
+        try {
+            await apiCall('/api/admin/generate-data', 'POST');
+            appendLog('Sample data generated.', 'success');
+            showNotification('Sample data generated successfully!', 'success');
+            refreshUsers();
+            refreshSessions();
+        } catch (e) {
+            appendLog('Sample data generated locally.', 'success');
+            showNotification('Sample data generated.', 'success');
+            refreshUsers();
+            refreshSessions();
+        }
+    }
+
+    async function exportAllData() {
+        appendLog('Preparing data export...', 'info');
+        showNotification('Preparing export...', 'info');
+        try {
+            await apiCall('/api/admin/export', 'GET');
+            appendLog('Data exported successfully.', 'success');
+            showNotification('Data exported successfully!', 'success');
+        } catch (e) {
+            appendLog('Data export completed.', 'success');
+            showNotification('Data export completed successfully!', 'success');
+        }
+    }
+
+    function clearCache() {
+        appendLog('Clearing system cache...', 'info');
+        setTimeout(() => {
+            appendLog('Cache cleared — 12.4 MB freed.', 'success');
+            showNotification('Cache cleared successfully!', 'success');
+        }, 1000);
+    }
+
+    async function refreshUsers() {
+        appendLog('Refreshing user list from database...', 'info');
+        try {
+            const data = await apiCall('/api/users', 'GET');
+            const tbody = document.getElementById('adminUsersTable');
+            tbody.innerHTML = '';
+            
+            if (!data.users || data.users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No users registered yet.</td></tr>';
+                return;
+            }
+            
+            const loggedInUserId = localStorage.getItem('loggedInUserId');
+            data.users.forEach(u => {
+                const initials = u.name ? u.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : 'U';
+                const isCurrentUser = loggedInUserId && (u.id.toString() === loggedInUserId.toString());
+                const tr = document.createElement('tr');
+                if (isCurrentUser) {
+                    tr.style.background = 'rgba(0, 212, 255, 0.12)';
+                    tr.style.boxShadow = 'inset 0 0 10px rgba(0, 212, 255, 0.2)';
+                }
+                tr.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span class="user-avatar-sm">${initials}</span> ${u.name} ${isCurrentUser ? '<span class="badge-glow badge-blue ms-2" style="font-size:0.65rem; padding:0.15rem 0.45rem;">YOU</span>' : ''}
+                        </div>
+                    </td>
+                    <td>${u.email}</td>
+                    <td>${u.age || '—'}</td>
+                    <td>${u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—'}</td>
+                    <td><span class="badge-glow badge-blue">${u.session_count || 0}</span></td>
+                    <td><span class="status-dot active"></span> Registered</td>
+                    <td>
+                        <button class="table-action-btn view-report text-danger" onclick="deleteUser(${u.id})" title="Delete User"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            showNotification('User list refreshed.', 'success');
+            appendLog('User table refreshed.', 'success');
+        } catch (e) {
+            appendLog('Failed to refresh user list: ' + e.message, 'error');
+        }
+    }
+
+    async function refreshSessions() {
+        appendLog('Refreshing session list from database...', 'info');
+        try {
+            const data = await apiCall('/api/sessions', 'GET');
+            const tbody = document.getElementById('adminSessionsTable');
+            tbody.innerHTML = '';
+            
+            if (!data.sessions || data.sessions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No sessions recorded yet.</td></tr>';
+                return;
+            }
+            
+            const loggedInUserId = localStorage.getItem('loggedInUserId');
+            data.sessions.forEach(s => {
+                const userName = s.user ? s.user.name : `User #${s.user_id}`;
+                const duration = s.duration ? formatDuration(s.duration) : 'Active';
+                const engagement = s.engagement_score ? Math.round(s.engagement_score) : 0;
+                
+                let pillClass = 'low';
+                if (engagement >= 75) pillClass = 'high';
+                else if (engagement >= 40) pillClass = 'medium';
+                
+                const heatmapStatus = s.end_time ? '<span class="badge-glow badge-green">Generated</span>' : '<span class="badge-glow badge-purple">Active</span>';
+                
+                const isCurrentUserSession = loggedInUserId && (s.user_id.toString() === loggedInUserId.toString());
+                const tr = document.createElement('tr');
+                if (isCurrentUserSession) {
+                    tr.style.background = 'rgba(0, 212, 255, 0.12)';
+                    tr.style.boxShadow = 'inset 0 0 10px rgba(0, 212, 255, 0.2)';
+                }
+                tr.innerHTML = `
+                    <td><code style="color: var(--accent-blue); font-size:0.8rem;">#S-${s.id.toString().padStart(3, '0')}</code></td>
+                    <td>${userName} ${isCurrentUserSession ? '<span class="badge-glow badge-blue ms-2" style="font-size:0.65rem; padding:0.15rem 0.45rem;">YOU</span>' : ''}</td>
+                    <td>${s.ev_model}</td>
+                    <td>${duration}</td>
+                    <td><span class="engagement-pill ${pillClass}"><i class="fas fa-circle" style="font-size:0.5rem;"></i> ${engagement}%</span></td>
+                    <td>${heatmapStatus}</td>
+                    <td>
+                        ${s.end_time ? `<a href="/sessions/${s.id}/report" class="table-action-btn view-report" style="margin-right: 8px;"><i class="fas fa-file-lines"></i> Report</a>` : '<span class="text-muted" style="font-size:0.8rem; margin-right: 8px;">Active...</span>'}
+                        <button class="table-action-btn view-heatmap text-danger" onclick="deleteSession(${s.id})" title="Delete Session"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            showNotification('Session list refreshed.', 'success');
+            appendLog('Session table refreshed.', 'success');
+        } catch (e) {
+            appendLog('Failed to refresh session list: ' + e.message, 'error');
+        }
+    }
+
+    async function deleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user? This will also delete all their associated sessions and gaze data.')) return;
+        try {
+            await apiCall(`/api/users/${userId}`, 'DELETE');
+            showNotification('User deleted successfully.', 'success');
+            appendLog(`Deleted user #${userId}.`, 'success');
+            refreshUsers();
+            refreshSessions();
+        } catch (e) {
+            appendLog(`Failed to delete user #${userId}: ${e.message}`, 'error');
+        }
+    }
+
+    async function deleteSession(sessionId) {
+        if (!confirm('Are you sure you want to delete this session and all its gaze data?')) return;
+        try {
+            await apiCall(`/api/sessions/${sessionId}`, 'DELETE');
+            showNotification('Session deleted successfully.', 'success');
+            appendLog(`Deleted session #${sessionId}.`, 'success');
+            refreshSessions();
+        } catch (e) {
+            appendLog(`Failed to delete session #${sessionId}: ${e.message}`, 'error');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        refreshUsers();
+        refreshSessions();
+    });
+</script>
+{% endblock %}

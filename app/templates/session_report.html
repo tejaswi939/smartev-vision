@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+
+{% block title %}Session Report — SmartEV Vision{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* ═══════════════════════════════════
+   SESSION REPORT PAGE
+   ═══════════════════════════════════ */
+.report-page {
+    padding: 2rem 0 4rem;
+}
+
+.report-header {
+    margin-bottom: 2.5rem;
+}
+
+.report-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    transition: var(--transition-fast);
+}
+
+.report-back-link:hover {
+    color: var(--accent-blue);
+}
+
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+/* ── Session Info Card ── */
+.session-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.session-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.session-info-item .info-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.session-info-item:nth-child(1) .info-icon {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent-blue);
+}
+
+.session-info-item:nth-child(2) .info-icon {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--accent-green);
+}
+
+.session-info-item:nth-child(3) .info-icon {
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--accent-purple);
+}
+
+.session-info-item:nth-child(4) .info-icon {
+    background: rgba(255, 0, 110, 0.1);
+    color: var(--accent-pink);
+}
+
+.session-info-item .info-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+}
+
+.session-info-item .info-value {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* ── Engagement Gauge ── */
+.engagement-gauge-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    min-height: 300px;
+}
+
+.gauge-circle {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin-bottom: 1.5rem;
+}
+
+.gauge-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.gauge-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 10;
+}
+
+.gauge-fill {
+    fill: none;
+    stroke: url(#gaugeGradient);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 565;
+    stroke-dashoffset: 565;
+    transition: stroke-dashoffset 1.5s ease;
+}
+
+.gauge-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.gauge-number {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gauge-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+}
+
+.engagement-breakdown {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.breakdown-item {
+    text-align: center;
+}
+
+.breakdown-item .breakdown-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.breakdown-item .breakdown-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ── ML Prediction Card ── */
+.prediction-card-inner {
+    padding: 2rem;
+}
+
+.prediction-result {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.prediction-model-name {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 0.3rem;
+}
+
+.prediction-category {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.confidence-meter {
+    margin: 1.5rem 0;
+}
+
+.confidence-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    margin-bottom: 0.4rem;
+}
+
+.confidence-label .conf-value {
+    font-weight: 700;
+    color: var(--accent-green);
+}
+
+.confidence-bar {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+    border-radius: 50px;
+    transition: width 1s ease;
+}
+
+.prediction-factors {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.prediction-factor {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.prediction-factor i {
+    color: var(--accent-blue);
+    font-size: 0.75rem;
+}
+
+/* ── Report Responsive ── */
+@media (max-width: 992px) {
+    .session-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .session-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .prediction-factors {
+        grid-template-columns: 1fr;
+    }
+
+    .gauge-circle {
+        width: 160px;
+        height: 160px;
+    }
+
+    .gauge-number {
+        font-size: 2.2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-page bg-grid-pattern">
+    <div class="container">
+
+        <!-- ═══════════ Header ═══════════ -->
+        <div class="report-header">
+            <a href="/dashboard" class="report-back-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <h1><i class="fas fa-file-chart-line text-accent me-2"></i>Session <span class="text-gradient">Report</span></h1>
+        </div>
+
+        <!-- ═══════════ Session Info ═══════════ -->
+        <div class="glass-card mb-4">
+            <div class="card-body">
+                <div class="session-info-grid">
+                    <div class="session-info-item">
+                        <div class="info-icon"><i class="fas fa-user"></i></div>
+                        <div>
+                            <div class="info-label">User</div>
+                            <div class="info-value" id="reportUserName">{{ session_data.user_name if session_data else 'John Doe' }}</div>
+                        </div>
+                    </div>
+                    <div class="session-info-item">
+                        <div class="info-icon"><i class="fas fa-car"></i></div>
+                        <div>
+                            <div class="info-label">EV Model</div>
+                            <div class="info-value" id="reportModelName">{{ session_data.model_name if session_data else 'Tesla Model S' }}</div>
+                        </div>
+                    </div>
+                    <div class="session-info-item">
+                        <div class="info-icon"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div class="info-label">Duration</div>
+                            <div class="info-value" id="reportDuration">{{ session_data.duration if session_data else '3m 45s' }}</div>
+                        </div>
+                    </div>
+                    <div class="session-info-item">
+                        <div class="info-icon"><i class="fas fa-calendar"></i></div>
+                        <div>
+                            <div class="info-label">Date</div>
+                            <div class="info-value" id="reportDate">{{ session_data.date if session_data else 'Jun 15, 2026' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- ═══════════ Engagement Gauge ═══════════ -->
+            <div class="col-lg-5">
+                <div class="glass-card">
+                    <div class="card-body">
+                        <div class="chart-title">
+                            <i class="fas fa-fire"></i> Engagement Score
+                        </div>
+                        <div class="engagement-gauge-wrapper">
+                            <div class="gauge-circle">
+                                <svg viewBox="0 0 200 200">
+                                    <defs>
+                                        <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color: var(--accent-blue);" />
+                                            <stop offset="100%" style="stop-color: var(--accent-green);" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle class="gauge-track" cx="100" cy="100" r="90"></circle>
+                                    <circle class="gauge-fill" cx="100" cy="100" r="90" id="engagementGaugeFill"></circle>
+                                </svg>
+                                <div class="gauge-value">
+                                    <span class="gauge-number" id="engagementScore">0</span>
+                                    <span class="gauge-label">Engagement</span>
+                                </div>
+                            </div>
+                            <div class="engagement-breakdown">
+                                <div class="breakdown-item">
+                                    <div class="breakdown-value text-accent" id="breakdownAttention">—</div>
+                                    <div class="breakdown-label">Attention</div>
+                                </div>
+                                <div class="breakdown-item">
+                                    <div class="breakdown-value text-accent-green" id="breakdownFocus">—</div>
+                                    <div class="breakdown-label">Focus</div>
+                                </div>
+                                <div class="breakdown-item">
+                                    <div class="breakdown-value" style="color: var(--accent-purple);" id="breakdownInterest">—</div>
+                                    <div class="breakdown-label">Interest</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ ML Prediction ═══════════ -->
+            <div class="col-lg-7">
+                <div class="glass-card">
+                    <div class="prediction-card-inner">
+                        <div class="chart-title">
+                            <i class="fas fa-brain"></i> ML Prediction Results
+                        </div>
+                        <div class="prediction-result">
+                            <div class="prediction-model-name text-gradient" id="predictedModel">Loading...</div>
+                            <div class="prediction-category">
+                                <span class="badge-glow badge-blue" id="predictedCategory">—</span>
+                                <span class="badge-glow badge-green ms-1" id="predictionConfidenceBadge">—</span>
+                            </div>
+                        </div>
+
+                        <div class="confidence-meter">
+                            <div class="confidence-label">
+                                <span>Prediction Confidence</span>
+                                <span class="conf-value" id="confidenceValue">87%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidenceFill" style="width: 87%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="prediction-factors">
+                            <div class="prediction-factor">
+                                <i class="fas fa-check"></i> Gaze duration on exterior
+                            </div>
+                            <div class="prediction-factor">
+                                <i class="fas fa-check"></i> Dashboard interaction time
+                            </div>
+                            <div class="prediction-factor">
+                                <i class="fas fa-check"></i> Color preference pattern
+                            </div>
+                            <div class="prediction-factor">
+                                <i class="fas fa-check"></i> Feature exploration depth
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ Row 2 ═══════════ -->
+        <div class="row g-4 mt-2">
+            <!-- Heatmap Image -->
+            <div class="col-lg-6">
+                <div class="glass-card">
+                    <div class="card-body">
+                        <div class="chart-title">
+                            <i class="fas fa-fire-flame-curved"></i> Gaze Heatmap
+                        </div>
+                        <div class="heatmap-viewer" id="reportHeatmap">
+                            <div class="heatmap-placeholder">
+                                <i class="fas fa-fire-flame-curved"></i>
+                                <p>Heatmap will be displayed here after session analysis</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Component Attention Breakdown -->
+            <div class="col-lg-6">
+                <div class="glass-card">
+                    <div class="card-body">
+                        <div class="chart-title">
+                            <i class="fas fa-chart-bar"></i> Component Attention Breakdown
+                        </div>
+                        <div class="chart-placeholder" id="reportAttentionChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ Gaze Timeline ═══════════ -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="glass-card">
+                    <div class="card-body">
+                        <div class="chart-title">
+                            <i class="fas fa-timeline"></i> Gaze Timeline
+                        </div>
+                        <div class="chart-placeholder" id="gazeTimelineChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const sessionId = "{{ session_data.id }}";
+    if (!sessionId) return;
+
+    const accentColors = ['#00d4ff', '#00ff88', '#a855f7', '#ff006e', '#ffc107', '#06d6a0', '#4cc9f0', '#e76f51'];
+    const chartConfig = { responsive: true, displayModeBar: false };
+    const chartLayout = {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { color: '#8888a0', family: 'Inter' },
+        margin: { l: 100, r: 20, t: 10, b: 40 },
+        xaxis: {
+            title: 'Attention Time (seconds)',
+            gridcolor: 'rgba(255,255,255,0.04)',
+            zerolinecolor: 'rgba(255,255,255,0.04)'
+        },
+        yaxis: {
+            gridcolor: 'rgba(255,255,255,0.04)'
+        }
+    };
+
+    // ── 1. Fetch Analytics Data ──
+    try {
+        const response = await fetch(`/api/analytics/${sessionId}`);
+        const data = await response.json();
+        
+        if (data && !data.error) {
+            // Animate engagement gauge
+            const score = data.engagement_score || 0;
+            const circumference = 2 * Math.PI * 90; // r=90
+            const offset = circumference - (score / 100) * circumference;
+            
+            const gaugeFill = document.getElementById('engagementGaugeFill');
+            if (gaugeFill) {
+                gaugeFill.style.strokeDashoffset = offset;
+            }
+            const scoreEl = document.getElementById('engagementScore');
+            if (scoreEl) {
+                animateCounter(scoreEl, Math.round(score), 1500, '%');
+            }
+
+            // Breakdown calculations
+            const bgPct = data.attention_by_aoi?.Background?.percentage || 0;
+            const attention = Math.round(100 - bgPct);
+            const uniqueAois = data.summary?.unique_aois_viewed || 0;
+            const focus = Math.round((uniqueAois / 6) * 100);
+            const interest = Math.round(score);
+
+            document.getElementById('breakdownAttention').textContent = `${attention}%`;
+            document.getElementById('breakdownFocus').textContent = `${focus}%`;
+            document.getElementById('breakdownInterest').textContent = `${interest}%`;
+
+            // Component attention chart
+            const aois = Object.keys(data.attention_by_aoi || {}).filter(k => k !== 'Background');
+            aois.sort((a, b) => data.attention_by_aoi[a].duration - data.attention_by_aoi[b].duration); // Ascending for horizontal Plotly layout (bottom to top)
+            
+            const chartData = [{
+                type: 'bar',
+                orientation: 'h',
+                y: aois,
+                x: aois.map(k => data.attention_by_aoi[k].duration),
+                marker: {
+                    color: aois.map((_, i) => accentColors[i % accentColors.length]),
+                    line: { width: 0 }
+                }
+            }];
+            Plotly.newPlot('reportAttentionChart', chartData, chartLayout, chartConfig);
+
+            // Gaze timeline chart
+            if (data.timeline && data.timeline.length > 0) {
+                const timelineData = [{
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    x: data.timeline.map(t => t.time),
+                    y: data.timeline.map(t => t.engagement),
+                    line: { color: '#00d4ff', width: 2, shape: 'spline' },
+                    marker: { size: 4, color: '#00d4ff' },
+                    fill: 'tozeroy',
+                    fillcolor: 'rgba(0, 212, 255, 0.05)'
+                }];
+
+                const timelineLayout = {
+                    ...chartLayout,
+                    margin: { l: 50, r: 20, t: 10, b: 50 },
+                    xaxis: {
+                        title: 'Time (seconds)',
+                        gridcolor: 'rgba(255,255,255,0.04)',
+                        zerolinecolor: 'rgba(255,255,255,0.04)'
+                    },
+                    yaxis: {
+                        title: 'Engagement %',
+                        gridcolor: 'rgba(255,255,255,0.04)',
+                        range: [0, 100]
+                    }
+                };
+                Plotly.newPlot('gazeTimelineChart', timelineData, timelineLayout, chartConfig);
+            }
+        }
+    } catch (e) {
+        console.error('Error fetching analytics:', e);
+    }
+
+    // ── 2. Fetch ML Prediction ──
+    try {
+        const response = await fetch(`/api/predict/${sessionId}`);
+        const data = await response.json();
+        if (data && !data.error) {
+            let modelName = data.preferred_model || 'Unknown';
+            if (modelName === 'A') modelName = 'Model A "Aero" Sedan';
+            else if (modelName === 'B') modelName = 'Model B "Terra" SUV';
+            else if (modelName === 'C') modelName = 'Model C "Flux" Sports Car';
+            
+            document.getElementById('predictedModel').textContent = modelName;
+            document.getElementById('predictedCategory').textContent = data.preference_category || '—';
+            
+            const confidencePct = Math.round((data.confidence || 0) * 100);
+            document.getElementById('confidenceValue').textContent = `${confidencePct}%`;
+            document.getElementById('confidenceFill').style.width = `${confidencePct}%`;
+
+            const badge = document.getElementById('predictionConfidenceBadge');
+            badge.textContent = `${confidencePct}% Confidence`;
+            if (data.confidence >= 0.75) {
+                badge.className = 'badge-glow badge-green ms-1';
+            } else if (data.confidence >= 0.40) {
+                badge.className = 'badge-glow badge-blue ms-1';
+            } else {
+                badge.className = 'badge-glow badge-purple ms-1';
+            }
+        }
+    } catch (e) {
+        console.error('Error fetching predictions:', e);
+    }
+
+    // ── 3. Fetch Heatmap Image ──
+    try {
+        const response = await fetch(`/api/heatmap/${sessionId}`);
+        const data = await response.json();
+        const viewer = document.getElementById('reportHeatmap');
+        if (data && data.heatmap_image && viewer) {
+            viewer.innerHTML = `<img src="data:image/png;base64,${data.heatmap_image}" alt="Gaze Heatmap" style="width: 100%; border-radius: var(--radius-md); box-shadow: var(--shadow-card);">`;
+        }
+    } catch (e) {
+        console.error('Error fetching heatmap:', e);
+    }
+});
+</script>
+{% endblock %}

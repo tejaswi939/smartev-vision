@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Virtual Showroom — SmartEV Vision{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/showroom.css') }}">
+<style>
+    /* Add subtle enhancements to fit style seamlessly */
+    .zoom-slider-container input[type=range]::-webkit-slider-thumb {
+        background: var(--accent-blue);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="showroom-container">
+    <!-- Three.js Rendering Canvas -->
+    <canvas id="showroom-canvas" class="showroom-canvas"></canvas>
+
+    <!-- Heatmap Overlay Canvas -->
+    <canvas id="heatmap-overlay" class="eye-tracking-overlay"></canvas>
+
+    <!-- Gaze Dot Cursor Indicator -->
+    <div id="gaze-dot" class="gaze-cursor" style="display: none;"></div>
+
+    <!-- HUD Overlay -->
+    <div class="hud-overlay">
+        
+        <!-- Top HUD Bar -->
+        <div class="hud-top-bar">
+            <div class="hud-brand">
+                <i class="fas fa-bolt text-accent"></i>
+                <span>Smart<span class="text-accent">EV</span> Showroom</span>
+            </div>
+            
+            <div class="hud-session-info">
+                <!-- Tracking Status -->
+                <div class="hud-stat">
+                    <span class="hud-stat-value d-flex align-items-center gap-2">
+                        <span id="tracking-dot" style="width: 8px; height: 8px; background-color: #ff4444; border-radius: 50%; display: inline-block; transition: background-color 0.3s ease;"></span>
+                        <span id="tracking-status-text" style="font-size: 0.85rem;">Initializing...</span>
+                    </span>
+                    <span class="hud-stat-label">Eye Tracker</span>
+                </div>
+                
+                <!-- Component Focus -->
+                <div class="hud-stat">
+                    <span class="hud-stat-value" id="gaze-component">—</span>
+                    <span class="hud-stat-label">Current Focus</span>
+                </div>
+                
+                <!-- Session Timer -->
+                <div class="hud-stat">
+                    <span class="hud-stat-value" id="session-timer">00:00</span>
+                    <span class="hud-stat-label">Duration</span>
+                </div>
+
+                <!-- Recording indicator badge -->
+                <div class="hud-recording-badge">
+                    <span class="recording-dot"></span>
+                    Live Tracking
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel (Left Side) -->
+        <div class="control-panel">
+            <button class="control-btn view-btn active" data-view="exterior" title="Exterior View">
+                <i class="fas fa-car"></i>
+            </button>
+            <button class="control-btn view-btn" data-view="interior" title="Interior View">
+                <i class="fas fa-chair"></i>
+            </button>
+            <button class="control-btn view-btn" data-view="front" title="Front View">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="control-btn view-btn" data-view="side" title="Side View">
+                <i class="fas fa-arrows-alt-h"></i>
+            </button>
+            <button class="control-btn view-btn" data-view="rear" title="Rear View">
+                <i class="fas fa-history"></i>
+            </button>
+
+            <hr style="border-color: rgba(255, 255, 255, 0.15); margin: 0.5rem 0;">
+
+            <button class="control-btn" id="toggle-heatmap-btn" title="Toggle Heatmap" style="font-size: 1.2rem;">
+                🔥
+            </button>
+            <button class="control-btn" id="calibrate-btn" title="Calibrate Eye Tracking">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+            <button class="control-btn" id="start-tracking-btn" title="Start Tracking">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="control-btn text-danger" id="end-session-btn" title="End Session">
+                <i class="fas fa-power-off"></i>
+            </button>
+        </div>
+
+        <!-- Model Selector Panel (Right Side) -->
+        <div class="model-selector-panel">
+            <div class="model-selector-title">Select EV Model</div>
+            
+            <!-- Model A -->
+            <div class="model-option model-btn active" data-model="A">
+                <div class="model-option-thumb"><i class="fas fa-tint text-info"></i></div>
+                <div class="model-option-info">
+                    <div class="model-option-name">Model A</div>
+                    <div class="model-option-type">Aero Sedan</div>
+                </div>
+            </div>
+            
+            <!-- Model B -->
+            <div class="model-option model-btn" data-model="B">
+                <div class="model-option-thumb"><i class="fas fa-mountain text-success"></i></div>
+                <div class="model-option-info">
+                    <div class="model-option-name">Model B</div>
+                    <div class="model-option-type">Terra SUV</div>
+                </div>
+            </div>
+            
+            <!-- Model C -->
+            <div class="model-option model-btn" data-model="C">
+                <div class="model-option-thumb"><i class="fas fa-bolt text-warning"></i></div>
+                <div class="model-option-info">
+                    <div class="model-option-name">Model C</div>
+                    <div class="model-option-type">Flux Sport</div>
+                </div>
+            </div>
+
+            <!-- Orbit Zoom Slider (integrated in Selector Panel) -->
+            <div class="model-selector-title mt-4">Zoom Control</div>
+            <div class="zoom-slider-container" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+                <i class="fas fa-search-minus" style="font-size: 0.75rem; color: var(--text-muted);"></i>
+                <input type="range" id="zoom-slider" class="form-range" min="1" max="100" value="50" style="flex: 1; height: 4px; background: rgba(255,255,255,0.1);">
+                <i class="fas fa-search-plus" style="font-size: 0.75rem; color: var(--text-muted);"></i>
+            </div>
+        </div>
+
+        <!-- Paint Color Picker Panel (Right Bottom) -->
+        <div class="color-picker-panel">
+            <div class="color-picker-title">Body Color</div>
+            <div class="color-swatches">
+                <div class="color-swatch active" data-color="2255cc" style="background-color: #2255cc;" title="Deep Blue Metallic"></div>
+                <div class="color-swatch" data-color="ff3344" style="background-color: #ff3344;" title="Crimson Red Gloss"></div>
+                <div class="color-swatch" data-color="22cc55" style="background-color: #22cc55;" title="Electric Green"></div>
+                <div class="color-swatch" data-color="eeeeee" style="background-color: #eeeeee;" title="Ice White Pearl"></div>
+                <div class="color-swatch" data-color="111111" style="background-color: #111111;" title="Matte Obsidian Black"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Info Bar / Key Controls -->
+        <div class="hud-bottom-bar">
+            <div class="hud-instructions">
+                <i class="fas fa-info-circle"></i>
+                <span>Use <kbd>Left Click + Drag</kbd> to orbit, <kbd>Scroll</kbd> to zoom, and <kbd>Right Click + Drag</kbd> to pan the camera.</span>
+            </div>
+        </div>
+
+        <!-- Webcam Preview -->
+        <div class="webcam-preview">
+            <video id="webcam-video" autoplay muted playsinline></video>
+            <div class="webcam-label">Webcam Feed</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Three.js and OrbitControls -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<!-- MediaPipe Face Mesh & Camera utilities for Eye Tracking -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+<!-- SmartEV Local scripts -->
+<script src="{{ url_for('static', filename='js/ev_models.js') }}"></script>
+<script src="{{ url_for('static', filename='js/eye_tracker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/heatmap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/showroom.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('showroom.html: initializing ShowroomScene...');
+        // Instantiate the scene manager with the canvas ID
+        const scene = new window.ShowroomScene('showroom-canvas');
+        scene.init();
+
+        // Save reference for clean up on window unload
+        window.activeShowroomScene = scene;
+    });
+
+    window.addEventListener('beforeunload', function () {
+        if (window.activeShowroomScene) {
+            console.log('showroom.html: cleaning up ShowroomScene resources...');
+            window.activeShowroomScene.dispose();
+        }
+    });
+</script>
+{% endblock %}

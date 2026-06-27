@@ -10,6 +10,7 @@ import Profile from "./pages/auth/Profile.js";
 import CustomerDashboard from "./pages/dashboards/CustomerDashboard.js";
 import AnalystDashboard from "./pages/dashboards/AnalystDashboard.js";
 import AdminDashboard from "./pages/dashboards/AdminDashboard.js";
+import SessionDetail from "./pages/dashboards/SessionDetail.js";
 
 const ShowroomPage = lazy(() => import("./showroom/ShowroomPage.js"));
 
@@ -34,6 +35,7 @@ export function AppRoutes() {
       </Route>
       <Route element={<ProtectedRoute roles={["CUSTOMER"]} />}>
         <Route path="/app" element={<CustomerDashboard />} />
+        <Route path="/app/sessions/:id" element={<SessionDetail />} />
       </Route>
       <Route element={<ProtectedRoute roles={["ANALYST"]} />}>
         <Route path="/insights" element={<AnalystDashboard />} />

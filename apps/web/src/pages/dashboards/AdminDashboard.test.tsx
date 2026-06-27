@@ -10,14 +10,19 @@ vi.mock("../../lib/apiClient", () => ({ api: { get: vi.fn(), post: vi.fn(), patc
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(api.get).mockImplementation((p: string) =>
-    p === "/users"
-      ? Promise.resolve({ items: [], total: 7, page: 1, pageSize: 20 })
+    p === "/analytics/overview"
+      ? Promise.resolve({
+          totalSessions: 7, activeSessions: 1, avgEngagement: 65, avgInterest: 60,
+          vehiclePopularity: [{ slug: "aurora-s", name: "Aurora S", sessionCount: 4, avgEngagement: 70, avgInterest: 60, totalViewMs: 1, score: 2.8 }],
+          topComponents: [{ meshName: "infotainment", attentionPct: 50 }],
+          bottomComponents: [],
+        })
       : Promise.resolve({ user: { id: "1", email: "admin@x.io", name: "Admin", role: "ADMIN" } }),
   );
 });
 
 describe("AdminDashboard", () => {
-  it("renders the total-users KPI from the API", async () => {
+  it("renders KPIs and vehicle popularity from the overview API", async () => {
     const qc = new QueryClient();
     render(
       <QueryClientProvider client={qc}>
@@ -30,5 +35,6 @@ describe("AdminDashboard", () => {
     );
     expect(screen.getByText(/admin overview/i)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("7")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Aurora S/)).toBeInTheDocument());
   });
 });

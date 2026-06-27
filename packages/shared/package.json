@@ -1,0 +1,14 @@
+{
+  "name": "@sev/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo ok"
+  },
+  "dependencies": { "zod": "^3.23.8" },
+  "devDependencies": { "vitest": "^2.1.4", "typescript": "^5.6.3" }
+}

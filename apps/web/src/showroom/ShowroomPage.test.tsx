@@ -25,6 +25,7 @@ beforeEach(() => {
       ? Promise.resolve({ vehicles: catalog })
       : Promise.resolve({ vehicle: detail(p.split("/").pop()!) }),
   );
+  vi.mocked(api.post).mockResolvedValue({ session: { id: "s1" } });
 });
 
 function renderPage() {

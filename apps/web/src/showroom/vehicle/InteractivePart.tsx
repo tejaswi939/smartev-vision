@@ -22,11 +22,16 @@ export function InteractivePart({ part, vehicleId, descriptor, onSelect }: {
 
   useVehicleAnimation(ref, { animation: part.animation, active: open, hovered });
 
-  // Tag the group + all descendants with the objectId so a Phase-2 gaze raycaster can resolve hits.
+  // Tag the group + all descendants so a gaze raycaster can resolve the object, its mesh, and component.
   useEffect(() => {
     const g = ref.current;
-    if (g) g.traverse((o) => { o.userData.objectId = objectId; });
-  }, [objectId]);
+    if (g)
+      g.traverse((o) => {
+        o.userData.objectId = objectId;
+        o.userData.meshName = part.meshName;
+        o.userData.componentId = part.id;
+      });
+  }, [objectId, part.meshName, part.id]);
 
   const fire = (type: InteractionEvent["type"]) =>
     bus.emit({ type, objectId, vehicleId, componentId: part.id, meshName: part.meshName, tMs: performance.now() });

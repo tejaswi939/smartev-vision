@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./routes/ProtectedRoute.js";
 import Landing from "./pages/Landing.js";
@@ -10,6 +11,8 @@ import CustomerDashboard from "./pages/dashboards/CustomerDashboard.js";
 import AnalystDashboard from "./pages/dashboards/AnalystDashboard.js";
 import AdminDashboard from "./pages/dashboards/AdminDashboard.js";
 
+const ShowroomPage = lazy(() => import("./showroom/ShowroomPage.js"));
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -18,6 +21,14 @@ export function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot" element={<Forgot />} />
       <Route path="/reset" element={<Reset />} />
+      <Route
+        path="/showroom"
+        element={
+          <Suspense fallback={<div className="p-8 text-slate-400">Loading showroom…</div>}>
+            <ShowroomPage />
+          </Suspense>
+        }
+      />
       <Route element={<ProtectedRoute />}>
         <Route path="/profile" element={<Profile />} />
       </Route>

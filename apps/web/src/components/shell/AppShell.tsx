@@ -7,10 +7,15 @@ const NAV: Record<Role, { to: string; label: string }[]> = {
   ADMIN: [
     { to: "/admin", label: "Overview" },
     { to: "/admin", label: "Users" },
+    { to: "/showroom", label: "Showroom" },
   ],
-  ANALYST: [{ to: "/insights", label: "Insights" }],
+  ANALYST: [
+    { to: "/insights", label: "Insights" },
+    { to: "/showroom", label: "Showroom" },
+  ],
   CUSTOMER: [
     { to: "/app", label: "My Sessions" },
+    { to: "/showroom", label: "Showroom" },
     { to: "/profile", label: "Profile" },
   ],
 };

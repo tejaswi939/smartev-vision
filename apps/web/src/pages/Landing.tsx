@@ -30,13 +30,19 @@ export default function Landing() {
           <p className="text-slate-400 text-lg">
             A VR + eye-tracking studio that turns showroom attention into design decisions.
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link to="/register">
               <Button>Get started</Button>
             </Link>
-            <Link to="/login">
-              <Button variant="ghost">Request demo</Button>
+            <Link to="/showroom">
+              <Button variant="ghost">Explore the showroom →</Button>
             </Link>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 pt-2 text-xs text-slate-500">
+            <span><span className="text-slate-300">3</span> real EVs</span>
+            <span><span className="text-slate-300">15</span> tracked components</span>
+            <span><span className="text-slate-300">ms-precision</span> gaze</span>
+            <span><span className="text-slate-300">live</span> heatmaps</span>
           </div>
         </motion.div>
         <div className="h-[420px] glass overflow-hidden">

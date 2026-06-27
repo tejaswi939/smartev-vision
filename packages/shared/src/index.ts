@@ -4,3 +4,5 @@ export * from "./types/api.js";
 export * from "./providers/gaze.js";
 export * from "./providers/emotion.js";
 export * from "./types/showroom.js";
+export * from "./contracts/gaze.js";
+export * from "./types/analytics.js";

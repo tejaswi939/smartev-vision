@@ -6,7 +6,7 @@ export function ChartCard({ title, children }: { title: string; children?: React
     <GlassCard>
       <div className="mb-3 font-display text-white">{title}</div>
       <div className="h-48 grid place-items-center text-slate-500 text-sm">
-        {children ?? "Live data arrives in Phase 4"}
+        {children ?? "No data yet"}
       </div>
     </GlassCard>
   );

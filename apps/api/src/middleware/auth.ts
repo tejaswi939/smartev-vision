@@ -16,6 +16,20 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   }
 }
 
+/** Populates req.user when a valid token is present, but never rejects (anonymous allowed). */
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const token = req.cookies?.[ACCESS_COOKIE];
+  if (token) {
+    try {
+      const p = verifyAccess(token);
+      req.user = { id: p.sub, role: p.role };
+    } catch {
+      /* ignore — proceed anonymously */
+    }
+  }
+  next();
+}
+
 export function requireRole(...roles: Role[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) return next(new HttpError(401, "Authentication required"));

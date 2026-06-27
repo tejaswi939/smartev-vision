@@ -5,10 +5,11 @@ build/
 .turbo/
 coverage/
 
-# env files (keep .env.example)
+# env files (keep .env.example and the non-secret test env)
 .env
 .env.*
 !.env.example
+!apps/api/.env.test
 
 # python (legacy app)
 venv/

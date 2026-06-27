@@ -70,16 +70,26 @@ export async function runSeed(prisma: PrismaClient): Promise<void> {
     vehicles.push(vehicle);
   }
 
-  // Synthetic completed sessions so later dashboards have data
+  // Synthetic completed sessions + component-view aggregates so dashboards have data
+  const DEMO_PARTS = ["body", "doors", "wheels", "infotainment", "battery", "seats"];
   for (let i = 0; i < 6; i++) {
     const vehicle = vehicles[i % vehicles.length]!;
     const started = new Date(Date.now() - (i + 1) * 86_400_000);
-    await prisma.session.create({
+    const session = await prisma.session.create({
       data: {
         userId: customer.id, vehicleId: vehicle.id, startedAt: started,
         endedAt: new Date(started.getTime() + 120_000), durationSec: 120,
-        status: "COMPLETED" as SessionStatus, engagementScore: 60 + i * 5, device: "web",
+        status: "COMPLETED" as SessionStatus,
+        engagementScore: 60 + i * 5, interestScore: 55 + i * 4, totalGazeMs: 90_000 + i * 1000,
+        gazeProvider: "mouse", device: "web",
       },
+    });
+    await prisma.componentView.createMany({
+      data: DEMO_PARTS.map((meshName, j) => ({
+        sessionId: session.id, vehicleId: vehicle.id, meshName,
+        totalViewMs: 1500 + j * 400 + i * 100, focusCount: 2 + j, interactionCount: j % 3,
+        entryCount: 2 + j, exitCount: 1 + j, firstSeenMs: j * 500, lastSeenMs: 5000 + j * 500,
+      })),
     });
   }
 

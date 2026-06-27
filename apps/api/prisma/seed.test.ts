@@ -19,4 +19,7 @@ describe("seed", () => {
   it("creates audit rows", async () => {
     expect(await prisma.auditLog.count()).toBeGreaterThan(0);
   });
+  it("creates component-view aggregates", async () => {
+    expect(await prisma.componentView.count()).toBeGreaterThan(0);
+  });
 });

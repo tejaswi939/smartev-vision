@@ -48,6 +48,9 @@ enum InteractionType {
   OPEN
   ROTATE
   ZOOM
+  ENTER
+  EXIT
+  SWITCH
 }
 
 enum ReportType {
@@ -148,7 +151,7 @@ model VehiclePart {
 
 model Session {
   id              String             @id @default(cuid())
-  userId          String
+  userId          String?
   vehicleId       String
   startedAt       DateTime           @default(now())
   endedAt         DateTime?
@@ -156,8 +159,11 @@ model Session {
   device          String             @default("web")
   status          SessionStatus      @default(ACTIVE)
   engagementScore Float?
+  interestScore   Float?
+  totalGazeMs     Float?
+  gazeProvider    String?
   createdAt       DateTime           @default(now())
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicle         Vehicle            @relation(fields: [vehicleId], references: [id])
   gaze            GazeData[]
   interactions    InteractionLog[]
@@ -165,6 +171,7 @@ model Session {
   emotions        EmotionDetection[]
   feedback        Feedback[]
   reports         Report[]
+  componentViews  ComponentView[]
 
   @@index([userId])
   @@index([vehicleId])
@@ -175,15 +182,22 @@ model GazeData {
   id        String       @id @default(cuid())
   sessionId String
   partId    String?
+  objectId  String?
   tMs       Float
   x         Float
   y         Float
   depth     Float?
+  camPos    Json?
+  camRot    Json?
+  rayDir    Json?
+  provider  String?
   createdAt DateTime     @default(now())
   session   Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   part      VehiclePart? @relation(fields: [partId], references: [id])
 
   @@index([sessionId])
+  @@index([sessionId, tMs])
+  @@index([objectId])
 }
 
 model InteractionLog {
@@ -203,13 +217,38 @@ model InteractionLog {
 model HeatmapCell {
   id        String       @id @default(cuid())
   sessionId String
+  vehicleId String?
   partId    String?
   x         Float
   y         Float
   intensity Float
+  weight    Float?
   session   Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   part      VehiclePart? @relation(fields: [partId], references: [id])
 
+  @@index([sessionId])
+  @@index([vehicleId])
+}
+
+model ComponentView {
+  id               String   @id @default(cuid())
+  sessionId        String
+  vehicleId        String
+  partId           String?
+  meshName         String
+  totalViewMs      Float    @default(0)
+  hoverMs          Float    @default(0)
+  focusCount       Int      @default(0)
+  entryCount       Int      @default(0)
+  exitCount        Int      @default(0)
+  interactionCount Int      @default(0)
+  firstSeenMs      Float?
+  lastSeenMs       Float?
+  updatedAt        DateTime @updatedAt
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, meshName])
+  @@index([vehicleId, meshName])
   @@index([sessionId])
 }
 

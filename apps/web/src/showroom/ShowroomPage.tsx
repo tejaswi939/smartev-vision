@@ -72,6 +72,11 @@ export default function ShowroomPage() {
         }
       />
       {showCrosshair && <Crosshair />}
+      {mode === "first-person" && (
+        <div className="pointer-events-none absolute left-1/2 top-20 z-10 -translate-x-1/2 rounded-full border border-neon/40 bg-base/70 px-4 py-2 text-xs text-slate-200">
+          Click to look around · <span className="text-neon">W A S D</span> to move · <span className="text-neon">Esc</span> to exit
+        </div>
+      )}
       <ShowroomCanvas>
         {/* InteractionProvider lives INSIDE the Canvas: React context does not cross the R3F root boundary. */}
         <InteractionProvider>

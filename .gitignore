@@ -19,6 +19,9 @@ __pycache__/
 # prisma generated client
 **/.prisma/
 
+# raw model drop folder (large source GLBs); the 3 served models live in apps/web/public/models/
+/models/
+
 # os / editor
 .DS_Store
 *.log

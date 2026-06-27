@@ -9,7 +9,7 @@ beforeAll(async () => { await runSeed(prisma); });
 
 describe("session API", () => {
   it("starts an anonymous session, ingests gaze, and ends with computed scores", async () => {
-    const start = await request(app).post("/api/v1/sessions").send({ vehicleId: "aurora-s", gazeProvider: "mouse" });
+    const start = await request(app).post("/api/v1/sessions").send({ vehicleId: "byd-atto-3", gazeProvider: "mouse" });
     expect(start.status).toBe(201);
     const id = start.body.session.id as string;
 
@@ -30,7 +30,7 @@ describe("session API", () => {
   });
 
   it("rejects an oversized gaze batch with 400", async () => {
-    const start = await request(app).post("/api/v1/sessions").send({ vehicleId: "aurora-s" });
+    const start = await request(app).post("/api/v1/sessions").send({ vehicleId: "byd-atto-3" });
     const id = start.body.session.id as string;
     const big = { samples: Array.from({ length: 1001 }, () => ({ tMs: 1, x: 0.1, y: 0.1, provider: "mouse" })) };
     expect((await request(app).post(`/api/v1/sessions/${id}/gaze`).send(big)).status).toBe(400);

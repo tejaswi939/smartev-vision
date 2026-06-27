@@ -27,7 +27,7 @@ describe("analytics API", () => {
   });
   it("returns vehicle analytics for an admin", async () => {
     const a = await agentFor("admin@smartev.io");
-    const res = await a.get("/api/v1/vehicles/aurora-s/analytics");
+    const res = await a.get("/api/v1/vehicles/byd-atto-3/analytics");
     expect(res.status).toBe(200);
     expect(res.body.components.length).toBeGreaterThan(0);
   });

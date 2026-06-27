@@ -28,10 +28,27 @@ const PARTS: PartSeed[] = [
   { name: "Windows", category: "GLASS", meshName: "windows", animation: null, hotspotPosition: { x: 0, y: 1.5, z: 0 }, specs: { Glazing: "Acoustic", Tint: "UV-block" } },
 ];
 
+// Real, electrified vehicles rendered from the GLB models in apps/web/public/models/.
+// modelUrl drives the GLB loader; the mesh→part mapping layer keeps gaze/heatmaps/analytics working.
 const VEHICLES = [
-  { slug: "aurora-s", name: "Aurora S", make: "SmartEV", modelName: "Aurora", year: 2026, type: "HATCHBACK" as VehicleType, category: "Compact", batteryKwh: 82, rangeKm: 560, priceUsd: 48000 },
-  { slug: "terra-x", name: "Terra X", make: "SmartEV", modelName: "Terra", year: 2026, type: "SUV" as VehicleType, category: "SUV", batteryKwh: 100, rangeKm: 610, priceUsd: 61000 },
-  { slug: "volt-gt", name: "Volt GT", make: "SmartEV", modelName: "Volt", year: 2026, type: "SPORTS" as VehicleType, category: "Sports", batteryKwh: 95, rangeKm: 540, priceUsd: 89000 },
+  {
+    slug: "byd-atto-3", name: "BYD Atto 3", make: "BYD", modelName: "Atto 3", year: 2024,
+    type: "SUV" as VehicleType, category: "Electric SUV", batteryKwh: 60.5, rangeKm: 420, priceUsd: 47000,
+    modelUrl: "/models/byd-atto-3.glb",
+    description: "BYD Atto 3 — a pure-electric compact SUV on the e-Platform 3.0 with a Blade LFP battery.",
+  },
+  {
+    slug: "ferrari-sf90", name: "Ferrari SF90 Stradale", make: "Ferrari", modelName: "SF90 Stradale", year: 2020,
+    type: "SPORTS" as VehicleType, category: "Plug-in Hybrid Hypercar", batteryKwh: 7.9, rangeKm: 25, priceUsd: 524000,
+    modelUrl: "/models/ferrari-sf90.glb",
+    description: "Ferrari SF90 Stradale — a plug-in hybrid hypercar: a 4.0L V8 plus three e-motors for 1000 cv and ~25 km of electric-only range.",
+  },
+  {
+    slug: "lamborghini-countach", name: "Lamborghini Countach LPI 800-4", make: "Lamborghini", modelName: "Countach LPI 800-4", year: 2022,
+    type: "SPORTS" as VehicleType, category: "Hybrid Hypercar", batteryKwh: 7.0, rangeKm: 20, priceUsd: 2640000,
+    modelUrl: "/models/lamborghini-countach.glb",
+    description: "Lamborghini Countach LPI 800-4 — a limited hybrid hypercar pairing a 6.5L V12 with a 48V e-motor for 803 cv.",
+  },
 ];
 
 export async function runSeed(prisma: PrismaClient): Promise<void> {
@@ -60,10 +77,8 @@ export async function runSeed(prisma: PrismaClient): Promise<void> {
   for (const v of VEHICLES) {
     const vehicle = await prisma.vehicle.create({
       data: {
-        ...v,
-        modelUrl: null, // null => procedural builder; set a path when a real GLB is uploaded
-        thumbnailUrl: `/thumbs/${v.slug}.png`,
-        description: `${v.name} — a ${v.category.toLowerCase()} EV.`,
+        ...v, // includes modelUrl + description
+        thumbnailUrl: null,
         parts: { create: PARTS.map((p, i) => ({ ...p, displayOrder: i })) },
       },
     });

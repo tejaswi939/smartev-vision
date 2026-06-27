@@ -17,7 +17,7 @@ describe("vehicle catalog", () => {
     expect(res.body.vehicles[0]).toHaveProperty("slug");
   });
   it("returns a vehicle with 15 parts by slug", async () => {
-    const res = await request(app).get("/api/v1/vehicles/aurora-s");
+    const res = await request(app).get("/api/v1/vehicles/byd-atto-3");
     expect(res.status).toBe(200);
     expect(res.body.vehicle.parts).toHaveLength(15);
     expect(res.body.vehicle.parts[0]).toHaveProperty("meshName");

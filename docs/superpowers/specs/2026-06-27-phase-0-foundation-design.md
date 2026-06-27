@@ -64,6 +64,7 @@ Role-based landing after login: `CUSTOMER → /app`, `ANALYST → /insights`, `A
 5. **Pluggable gaze provider:** a `GazeProvider` interface in `packages/shared`. Phase 2 ships `SimulatedMouseGazeProvider`; `WebGazerProvider` / `TobiiProvider` drop in later with **zero changes to consumers**.
 6. **Audit everything** security/admin-relevant via a central `audit()` service writing `AuditLog`.
 7. **Per-phase Definition of Done:** functional + tested + documented before the next phase starts.
+8. **Pluggable emotion provider:** an `EmotionProvider` interface (parallel to `GazeProvider`) plus the `EmotionDetection` table and reserved API endpoints ship as **inert seams** now; a later phase implements real webcam emotion detection (OpenCV/DeepFace or MediaPipe) with **no consumer changes**. *(Decision: emotion detection stays a modular placeholder until after showroom, capture, heatmaps, analytics, and dashboards are complete.)*
 
 ---
 
@@ -184,3 +185,10 @@ VR showroom interactions, gaze capture, live analytics/heatmap computation, dash
 - **Two runtimes (Node + Python):** accepted for ML reuse; isolated in `services/ml` behind a typed HTTP contract, stubbed until Phase 3.
 - **Placeholder 3D fidelity:** mitigated by the modular, data-driven catalog — real GLBs swap in without code changes.
 - **Schema churn:** the full schema ships up front so migrations stabilize early; later phases add behavior, not core tables.
+
+## 8. Engineering standards (all phases)
+- **Independently runnable:** each phase boots and demos on its own (`pnpm dev` + documented steps) and is green before the next begins.
+- **Test pyramid:** unit tests (services/components), API tests (Supertest against a disposable test Postgres), and integration tests for cross-module flows; critical paths (auth, capture, scoring) are covered.
+- **Conventional commits per phase:** each phase lands as its own reviewed commit/PR with docs and tests passing.
+- **Performance & scalability:** indexed foreign keys + time columns; paginated list endpoints; batched gaze ingest; stateless API/ML services (horizontal-scale ready); code-splitting and lazy-loaded R3F/3D assets on the web.
+- **Modular & reusable by default:** enterprise layering in the API, a documented design-system component layer in the web, and shared contracts in `packages/shared` consumed by both.

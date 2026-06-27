@@ -13,5 +13,7 @@ export const openapiDocument = {
     "/users/me": { patch: { summary: "Update profile", responses: { "200": { description: "OK" } } } },
     "/users": { get: { summary: "List users (admin)", responses: { "200": { description: "OK" }, "403": { description: "Forbidden" } } } },
     "/users/{id}/role": { patch: { summary: "Change role (admin)", responses: { "200": { description: "OK" } } } },
+    "/vehicles": { get: { summary: "List published vehicles", responses: { "200": { description: "OK" } } } },
+    "/vehicles/{slug}": { get: { summary: "Vehicle + parts by slug", responses: { "200": { description: "OK" }, "404": { description: "Not found" } } } },
   },
 } as const;

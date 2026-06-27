@@ -12,7 +12,7 @@ describe("register + login", () => {
     const res = await request(app).post("/api/v1/auth/register").send(newUser);
     expect(res.status).toBe(201);
     expect(res.body.user).toMatchObject({ email: newUser.email, role: "CUSTOMER" });
-    expect(res.headers["set-cookie"].join(";")).toContain("sev_access");
+    expect(String(res.headers["set-cookie"])).toContain("sev_access");
   });
   it("rejects duplicate email with 409", async () => {
     await request(app).post("/api/v1/auth/register").send(newUser);
@@ -27,7 +27,7 @@ describe("register + login", () => {
     await request(app).post("/api/v1/auth/register").send(newUser);
     const res = await request(app).post("/api/v1/auth/login").send({ email: newUser.email, password: newUser.password });
     expect(res.status).toBe(200);
-    expect(res.headers["set-cookie"].join(";")).toContain("sev_access");
+    expect(String(res.headers["set-cookie"])).toContain("sev_access");
   });
   it("rejects wrong password with 401", async () => {
     await request(app).post("/api/v1/auth/register").send(newUser);

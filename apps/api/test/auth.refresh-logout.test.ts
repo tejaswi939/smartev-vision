@@ -17,7 +17,7 @@ describe("refresh + logout", () => {
     const agent = await registerAgent();
     const res = await agent.post("/api/v1/auth/refresh");
     expect(res.status).toBe(200);
-    expect(res.headers["set-cookie"].join(";")).toContain("sev_access");
+    expect(String(res.headers["set-cookie"])).toContain("sev_access");
   });
   it("401s refresh without a refresh cookie", async () => {
     const res = await request(app).post("/api/v1/auth/refresh");
@@ -27,6 +27,6 @@ describe("refresh + logout", () => {
     const agent = await registerAgent();
     const res = await agent.post("/api/v1/auth/logout");
     expect(res.status).toBe(200);
-    expect(res.headers["set-cookie"].join(";")).toContain("sev_access=;");
+    expect(String(res.headers["set-cookie"])).toContain("sev_access=;");
   });
 });

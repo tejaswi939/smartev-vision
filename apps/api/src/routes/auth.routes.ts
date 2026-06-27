@@ -3,7 +3,7 @@ import { asyncHandler } from "../controllers/helpers.js";
 import { requireAuth } from "../middleware/auth.js";
 import * as ctrl from "../controllers/auth.controller.js";
 
-export const authRoutes = Router();
+export const authRoutes: Router = Router();
 
 authRoutes.post("/register", asyncHandler(ctrl.register));
 authRoutes.post("/login", asyncHandler(ctrl.login));

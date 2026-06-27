@@ -1,0 +1,12 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sev
+      POSTGRES_PASSWORD: sev
+      POSTGRES_DB: smartev
+    ports: ["5432:5432"]
+    volumes: ["sev_pgdata:/var/lib/postgresql/data"]
+volumes:
+  sev_pgdata:

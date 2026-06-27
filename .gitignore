@@ -1,0 +1,23 @@
+# dependencies / build output
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+
+# env files (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# python (legacy app)
+venv/
+__pycache__/
+*.pyc
+
+# prisma generated client
+**/.prisma/
+
+# os / editor
+.DS_Store
+*.log

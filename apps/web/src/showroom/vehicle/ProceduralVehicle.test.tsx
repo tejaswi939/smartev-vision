@@ -11,7 +11,8 @@ const mkPart = (meshName: string, id: string) => ({
 
 const vehicle: VehicleDetail = {
   id: "v1", slug: "x", name: "X", category: "Compact", type: "HATCHBACK", thumbnailUrl: null,
-  rangeKm: 1, priceUsd: 1, modelUrl: null, metadata: null,
+  rangeKm: 1, priceUsd: 1, make: "X", modelName: "X", year: 2026, batteryKwh: 1, description: null,
+  modelUrl: null, metadata: null,
   parts: [mkPart("body", "p-body"), mkPart("doors", "p-doors")],
 };
 

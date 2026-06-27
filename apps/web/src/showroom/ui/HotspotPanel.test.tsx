@@ -9,11 +9,12 @@ const part: VehiclePartDTO = {
 };
 
 describe("HotspotPanel", () => {
-  it("shows specs and the attention placeholder", () => {
+  it("shows the part name, category, specs, and the live-tracking note", () => {
     render(<HotspotPanel part={part} onClose={() => {}} />);
     expect(screen.getByText("Battery Pack")).toBeInTheDocument();
+    expect(screen.getByText("BATTERY")).toBeInTheDocument();
     expect(screen.getByText(/82 kWh/)).toBeInTheDocument();
-    expect(screen.getByText(/available after Phase 3/i)).toBeInTheDocument();
+    expect(screen.getByText(/tracked live/i)).toBeInTheDocument();
   });
   it("renders nothing without a part", () => {
     const { container } = render(<HotspotPanel part={null} onClose={() => {}} />);

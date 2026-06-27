@@ -28,6 +28,11 @@ export interface VehiclePartDTO {
 }
 
 export interface VehicleDetail extends VehicleSummary {
+  make: string;
+  modelName: string;
+  year: number;
+  batteryKwh: number;
+  description: string | null;
   modelUrl: string | null;
   metadata: Record<string, unknown> | null;
   parts: VehiclePartDTO[];

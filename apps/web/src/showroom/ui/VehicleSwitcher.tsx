@@ -1,18 +1,28 @@
 import type { VehicleSummary } from "@sev/shared";
-import { Button } from "../../components/ui/index.js";
 
+/** Segmented pill selector — compact enough for the real (long) vehicle names. */
 export function VehicleSwitcher({ vehicles, activeSlug, onSelect }: {
   vehicles: VehicleSummary[];
   activeSlug: string | null;
   onSelect: (slug: string) => void;
 }) {
   return (
-    <div className="flex gap-2">
-      {vehicles.map((v) => (
-        <Button key={v.slug} variant={v.slug === activeSlug ? "primary" : "ghost"} onClick={() => onSelect(v.slug)}>
-          {v.name} <span className="opacity-60">· {v.category}</span>
-        </Button>
-      ))}
+    <div className="flex flex-wrap items-center gap-1 rounded-2xl border border-white/10 bg-base/50 p-1 backdrop-blur">
+      {vehicles.map((v) => {
+        const active = v.slug === activeSlug;
+        return (
+          <button
+            key={v.slug}
+            onClick={() => onSelect(v.slug)}
+            aria-pressed={active}
+            className={`rounded-xl px-3 py-1.5 text-sm font-medium transition ${
+              active ? "bg-neon text-base shadow-glow" : "text-slate-300 hover:bg-white/10"
+            }`}
+          >
+            {v.name}
+          </button>
+        );
+      })}
     </div>
   );
 }

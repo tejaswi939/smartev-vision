@@ -20,6 +20,7 @@ import { useSession } from "./gaze/useSession.js";
 import { HeatmapOverlay } from "./gaze/HeatmapOverlay.js";
 import { Crosshair } from "./gaze/Crosshair.js";
 import { GazeProviderSelector } from "./gaze/GazeProviderSelector.js";
+import { VehicleInfoPanel } from "./ui/VehicleInfoPanel.js";
 
 const STORAGE_KEY = "sev_gaze_provider";
 
@@ -90,6 +91,7 @@ export default function ShowroomPage() {
           <PostFX />
         </InteractionProvider>
       </ShowroomCanvas>
+      {vehicle && <VehicleInfoPanel vehicle={vehicle} />}
       <HotspotPanel part={selectedPart} onClose={() => setSelectedPartId(null)} />
     </div>
   );

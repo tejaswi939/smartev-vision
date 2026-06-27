@@ -30,6 +30,8 @@ export async function getVehicle(req: Request, res: Response) {
   if (!v || !v.isPublished) throw new HttpError(404, "Vehicle not found");
   const detail: VehicleDetail = {
     ...toSummary(v),
+    make: v.make, modelName: v.modelName, year: v.year, batteryKwh: v.batteryKwh,
+    description: v.description,
     modelUrl: v.modelUrl,
     metadata: v.metadata as unknown as Record<string, unknown> | null,
     parts: v.parts.map(toPart),

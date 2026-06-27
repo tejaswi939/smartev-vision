@@ -30,6 +30,9 @@ enum PartCategory {
   INFOTAINMENT
   DOORS
   MIRRORS
+  CHARGING
+  GLASS
+  SEATING
 }
 
 enum SessionStatus {
@@ -108,9 +111,11 @@ model Vehicle {
   batteryKwh   Float
   rangeKm      Int
   priceUsd     Int
-  modelUrl     String
+  modelUrl     String?
   thumbnailUrl String?
   description  String?
+  category     String?
+  metadata     Json?
   isPublished  Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -123,11 +128,15 @@ model Vehicle {
 model VehiclePart {
   id           String           @id @default(cuid())
   vehicleId    String
-  name         String
-  category     PartCategory
-  meshName     String
-  description  String?
-  displayOrder Int              @default(0)
+  name            String
+  category        PartCategory
+  meshName        String
+  description     String?
+  specs           Json?
+  hotspotPosition Json?
+  animation       String?
+  interactive     Boolean          @default(true)
+  displayOrder    Int              @default(0)
   vehicle      Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   gaze         GazeData[]
   interactions InteractionLog[]

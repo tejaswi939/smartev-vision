@@ -46,6 +46,11 @@ pnpm -r test          # shared + api (integration) + web
 pnpm -r typecheck
 ```
 
+## VR Showroom (Phase 1)
+- Open **`/showroom`** (public route; also in the dashboard nav).
+- Switch vehicles (Compact / SUV / Sports) via the top switcher. Hover/click any of the 15 components to open its hotspot panel (specs + animation). Toggle camera modes (Orbit / Walk / First-person) and enter VR if the device supports WebXR.
+- **Add a new vehicle (no code changes):** insert a `Vehicle` row + its `VehiclePart` rows (`meshName`, `category`, `specs`, `hotspotPosition`, `animation`). Leave `modelUrl = null` for the procedural builder, or set it to a real `.glb` path (Draco/KTX2 decoders go in `apps/web/public/decoders/`) — `VehicleModel` auto-maps GLB meshes to parts by `meshName`.
+
 ## Layout
 - `apps/web` — React + Vite + Tailwind + R3F (frontend)
 - `apps/api` — Express + Prisma (backend, owns `prisma/`)

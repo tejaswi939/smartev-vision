@@ -12,5 +12,6 @@ RUN pnpm install --frozen-lockfile --prod=false
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN pnpm --filter @sev/api exec prisma generate
+ENV NODE_OPTIONS="--max-old-space-size=256"
 EXPOSE 4000
 CMD ["sh","-c","pnpm --filter @sev/api exec prisma migrate deploy && pnpm --filter @sev/api exec tsx src/server.ts"]

@@ -16,7 +16,7 @@ function req(name: string): string {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   isProd: process.env.NODE_ENV === "production",
-  port: Number(process.env.API_PORT ?? 4000),
+  port: Number(process.env.PORT ?? process.env.API_PORT ?? 4000),
   jwtAccessSecret: req("JWT_ACCESS_SECRET"),
   jwtRefreshSecret: req("JWT_REFRESH_SECRET"),
   accessTtl: Number(process.env.ACCESS_TTL ?? 900),

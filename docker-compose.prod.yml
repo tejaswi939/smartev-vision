@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment: { POSTGRES_USER: sev, POSTGRES_PASSWORD: sev, POSTGRES_DB: smartev }
+    volumes: ["sev_pgdata_prod:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sev -d smartev"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  ml:
+    build: ./services/ml
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql://sev:sev@db:5432/smartev?schema=public"
+      ML_SERVICE_URL: "http://ml:8000"
+      JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:-dev-access-change-me}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:-dev-refresh-change-me}"
+      NODE_ENV: "production"
+      PORT: "4000"
+    depends_on:
+      db: { condition: service_healthy }
+      ml: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    restart: unless-stopped
+    environment:
+      API_UPSTREAM: "api:4000"   # nginx proxies /api → the compose "api" service
+    ports: ["8080:80"]
+    depends_on:
+      api: { condition: service_healthy }
+volumes:
+  sev_pgdata_prod: {}

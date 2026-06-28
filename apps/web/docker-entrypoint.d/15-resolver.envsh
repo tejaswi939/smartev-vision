@@ -1,0 +1,11 @@
+#!/bin/sh
+# Export the platform's DNS resolver(s) from /etc/resolv.conf so nginx can resolve the API
+# upstream at request time. This runs as a `.envsh` (sourced) BEFORE 20-envsubst-on-templates.sh,
+# so ${NGINX_RESOLVER} is populated when the nginx config template is rendered.
+#
+# Works everywhere: Docker Compose -> 127.0.0.11 (embedded DNS, resolves "api"); Render and other
+# platforms -> their internal DNS (resolves the private service hostname).
+NGINX_RESOLVER="$(awk 'BEGIN { ORS = " " } $1 == "nameserver" { print $2 }' /etc/resolv.conf 2>/dev/null)"
+[ -n "$NGINX_RESOLVER" ] || NGINX_RESOLVER="127.0.0.11"
+export NGINX_RESOLVER
+echo "[15-resolver] NGINX_RESOLVER=${NGINX_RESOLVER}"

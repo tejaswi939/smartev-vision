@@ -1,0 +1,440 @@
+/* ═══════════════════════════════════════════════════════
+   SmartEV Vision — Showroom / VR Styles
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Fullscreen Canvas ── */
+.showroom-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-base);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.showroom-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: radial-gradient(ellipse at center, #111122 0%, #0a0a0f 70%);
+}
+
+/* ── HUD Overlay ── */
+.hud-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.hud-overlay > * {
+    pointer-events: auto;
+}
+
+/* ── Top HUD Bar ── */
+.hud-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(180deg, rgba(10, 10, 15, 0.8) 0%, transparent 100%);
+}
+
+.hud-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.hud-brand i {
+    color: var(--accent-blue);
+}
+
+.hud-session-info {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.hud-session-info .hud-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.hud-stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+.hud-stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.hud-recording-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    background: rgba(255, 0, 110, 0.15);
+    border: 1px solid rgba(255, 0, 110, 0.3);
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent-pink);
+}
+
+.hud-recording-badge .recording-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-pink);
+    border-radius: 50%;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* ── Control Panel (Left Side) ── */
+.control-panel {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.control-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.control-btn:hover {
+    color: var(--accent-blue);
+    border-color: var(--border-glow);
+    background: rgba(0, 212, 255, 0.08);
+    transform: scale(1.08);
+}
+
+.control-btn.active {
+    color: var(--accent-blue);
+    background: rgba(0, 212, 255, 0.12);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+/* ── Model Selector Panel (Right Side) ── */
+.model-selector-panel {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    width: 220px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.model-selector-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.85rem;
+}
+
+.model-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-bottom: 0.35rem;
+    border: 1px solid transparent;
+}
+
+.model-option:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.model-option.active {
+    background: rgba(0, 212, 255, 0.08);
+    border-color: rgba(0, 212, 255, 0.2);
+}
+
+.model-option-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.model-option-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.model-option-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.model-option-type {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Color Picker Panel ── */
+.color-picker-panel {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 6rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    width: 200px;
+}
+
+.color-picker-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.85rem;
+}
+
+.color-swatches {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+}
+
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: var(--transition-fast);
+    position: relative;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.color-swatch.active {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+}
+
+.color-swatch.active::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Bottom Info Bar ── */
+.hud-bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(0deg, rgba(10, 10, 15, 0.8) 0%, transparent 100%);
+}
+
+.hud-instructions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hud-instructions i {
+    color: var(--accent-blue);
+}
+
+.hud-instructions kbd {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: var(--font-main);
+}
+
+/* ── Eye-Tracking Overlay ── */
+.eye-tracking-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.gaze-cursor {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--accent-blue);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.08s ease;
+    pointer-events: none;
+}
+
+.gaze-cursor::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    background: rgba(0, 212, 255, 0.3);
+    border-radius: 50%;
+}
+
+.gaze-cursor::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 50%;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── Webcam Preview ── */
+.webcam-preview {
+    position: absolute;
+    bottom: 5rem;
+    left: 1.25rem;
+    width: 160px;
+    height: 120px;
+    background: #000;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.webcam-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.webcam-label {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.5rem;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-blue);
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+}
+
+/* ══════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════ */
+@media (max-width: 768px) {
+    .model-selector-panel {
+        display: none;
+    }
+
+    .control-panel {
+        left: 0.5rem;
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 0.95rem;
+    }
+
+    .hud-session-info {
+        display: none;
+    }
+
+    .webcam-preview {
+        width: 120px;
+        height: 90px;
+        bottom: 4rem;
+    }
+
+    .color-picker-panel {
+        display: none;
+    }
+}

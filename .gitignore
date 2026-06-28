@@ -1,0 +1,28 @@
+# dependencies / build output
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+
+# env files (keep .env.example and the non-secret test env)
+.env
+.env.*
+!.env.example
+!.env.production.example
+!apps/api/.env.test
+
+# python (legacy app)
+venv/
+__pycache__/
+*.pyc
+
+# prisma generated client
+**/.prisma/
+
+# raw model drop folder (large source GLBs); the 3 served models live in apps/web/public/models/
+/models/
+
+# os / editor
+.DS_Store
+*.log

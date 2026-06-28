@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Calibration — SmartEV Vision{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/showroom.css') }}">
+<style>
+/* ═══════════════════════════════════
+   CALIBRATION PAGE
+   ═══════════════════════════════════ */
+.calibration-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    overflow: hidden;
+}
+
+.calibration-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.03) 0%, transparent 60%);
+}
+
+.calibration-grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.02) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.5;
+}
+
+/* ── Calibration Dots Grid ── */
+.calibration-dots-container {
+    position: absolute;
+    inset: 10%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 0;
+    z-index: 10;
+}
+
+.calibration-dot-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calibration-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.calibration-dot::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    transition: var(--transition-smooth);
+}
+
+.calibration-dot.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 60px rgba(0, 212, 255, 0.2);
+    animation: calibration-pulse 1.5s ease-in-out infinite;
+    transform: scale(1.3);
+}
+
+.calibration-dot.active::before {
+    border-color: rgba(0, 212, 255, 0.3);
+    animation: calibration-ring 1.5s ease-in-out infinite;
+}
+
+.calibration-dot.completed {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+    transform: scale(1);
+}
+
+@keyframes calibration-pulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 60px rgba(0, 212, 255, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 35px rgba(0, 212, 255, 0.7), 0 0 80px rgba(0, 212, 255, 0.3);
+    }
+}
+
+@keyframes calibration-ring {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.6);
+        opacity: 0.3;
+    }
+}
+
+/* ── Center Panel ── */
+.calibration-center-panel {
+    position: relative;
+    z-index: 20;
+    text-align: center;
+    max-width: 480px;
+    padding: 0 1rem;
+}
+
+.calibration-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 50%;
+    font-size: 2rem;
+    color: var(--accent-blue);
+}
+
+.calibration-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+}
+
+.calibration-instructions {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.calibration-instructions strong {
+    color: var(--accent-blue);
+}
+
+/* ── Progress ── */
+.calibration-progress-wrapper {
+    margin-bottom: 2rem;
+}
+
+.calibration-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.calibration-progress-label .progress-percent {
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+/* ── Buttons ── */
+.calibration-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+#startCalibrationBtn {
+    min-width: 220px;
+}
+
+#startSessionBtn {
+    display: none;
+    min-width: 220px;
+}
+
+#startSessionBtn.visible {
+    display: inline-flex;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+/* ── Webcam Preview ── */
+.calibration-webcam {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 180px;
+    height: 135px;
+    background: #000;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    z-index: 30;
+}
+
+.calibration-webcam video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.calibration-webcam .webcam-badge {
+    position: absolute;
+    top: 0.4rem;
+    left: 0.5rem;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-blue);
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.calibration-webcam .webcam-badge .rec-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-pink);
+    border-radius: 50%;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* ── Status Messages ── */
+.calibration-status {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-top: 1.5rem;
+    min-height: 1.5em;
+    transition: var(--transition-fast);
+}
+
+.calibration-status.success {
+    color: var(--accent-green);
+}
+
+@media (max-width: 768px) {
+    .calibration-dots-container {
+        inset: 5%;
+    }
+
+    .calibration-webcam {
+        width: 130px;
+        height: 98px;
+        bottom: 1rem;
+        right: 1rem;
+    }
+
+    .calibration-title {
+        font-size: 1.4rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calibration-page">
+    <!-- Background -->
+    <div class="calibration-bg"></div>
+    <div class="calibration-grid-lines"></div>
+
+    <!-- 3x3 Calibration Dots -->
+    <div class="calibration-dots-container" id="calibrationDots">
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="0"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="1"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="2"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="3"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="4"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="5"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="6"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="7"></div></div>
+        <div class="calibration-dot-wrapper"><div class="calibration-dot" data-index="8"></div></div>
+    </div>
+
+    <!-- Center Panel -->
+    <div class="calibration-center-panel">
+        <div class="calibration-icon">
+            <i class="fas fa-eye"></i>
+        </div>
+
+        <h1 class="calibration-title">Eye Tracking <span class="text-accent">Calibration</span></h1>
+
+        <p class="calibration-instructions">
+            <strong>Look at each dot</strong> as it lights up. Keep your head still and follow the dots with your eyes only. This ensures accurate gaze tracking during your VR session.
+        </p>
+
+        <!-- Progress -->
+        <div class="calibration-progress-wrapper">
+            <div class="calibration-progress-label">
+                <span>Calibration Progress</span>
+                <span class="progress-percent" id="progressPercent">0%</span>
+            </div>
+            <div class="progress progress-glass">
+                <div class="progress-bar" role="progressbar" id="calibrationProgressBar"
+                     style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="calibration-actions">
+            <button class="btn-glow btn-glow-blue" id="startCalibrationBtn" onclick="startCalibration()">
+                <i class="fas fa-crosshairs"></i> Start Calibration
+            </button>
+            <a href="/showroom?user_id={{ user_id }}" class="btn-glow btn-glow-green" id="startSessionBtn">
+                <i class="fas fa-play"></i> Start VR Session
+            </a>
+        </div>
+
+        <p class="calibration-status" id="calibrationStatus"></p>
+    </div>
+
+    <!-- Webcam Preview -->
+    <div class="calibration-webcam">
+        <video id="webcamPreview" autoplay muted playsinline></video>
+        <div class="webcam-badge">
+            <span class="rec-dot"></span>
+            Camera
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── Calibration State ──
+    const dots = document.querySelectorAll('.calibration-dot');
+    const progressBar = document.getElementById('calibrationProgressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const statusEl = document.getElementById('calibrationStatus');
+    const startBtn = document.getElementById('startCalibrationBtn');
+    const sessionBtn = document.getElementById('startSessionBtn');
+
+    let currentDot = 0;
+    let isCalibrating = false;
+    const calibrationOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8]; // Left-to-right, top-to-bottom
+
+    /**
+     * Start the calibration sequence
+     */
+    function startCalibration() {
+        if (isCalibrating) return;
+        isCalibrating = true;
+        currentDot = 0;
+        startBtn.style.display = 'none';
+        statusEl.textContent = 'Calibrating... Look at the highlighted dot.';
+        statusEl.classList.remove('success');
+
+        // Reset all dots
+        dots.forEach(dot => {
+            dot.classList.remove('active', 'completed');
+        });
+
+        // Start the sequence
+        activateNextDot();
+    }
+
+    /**
+     * Activate the next dot in sequence
+     */
+    function activateNextDot() {
+        if (currentDot >= calibrationOrder.length) {
+            onCalibrationComplete();
+            return;
+        }
+
+        const dotIndex = calibrationOrder[currentDot];
+        const dot = dots[dotIndex];
+        dot.classList.add('active');
+
+        statusEl.textContent = `Point ${currentDot + 1} of ${calibrationOrder.length} — Look at the dot`;
+
+        // Simulate gaze capture (1.5s per dot)
+        setTimeout(() => {
+            dot.classList.remove('active');
+            dot.classList.add('completed');
+            currentDot++;
+
+            // Update progress
+            const progress = Math.round((currentDot / calibrationOrder.length) * 100);
+            progressBar.style.width = progress + '%';
+            progressPercent.textContent = progress + '%';
+
+            // Next dot after short delay
+            setTimeout(activateNextDot, 300);
+        }, 1500);
+    }
+
+    /**
+     * Called when calibration is complete
+     */
+    function onCalibrationComplete() {
+        isCalibrating = false;
+        statusEl.textContent = '✓ Calibration complete! You\'re ready to start.';
+        statusEl.classList.add('success');
+        sessionBtn.classList.add('visible');
+        showNotification('Eye tracking calibrated successfully!', 'success');
+    }
+
+    // ── Initialize Webcam Preview ──
+    async function initWebcam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 320, height: 240, facingMode: 'user' }
+            });
+            document.getElementById('webcamPreview').srcObject = stream;
+        } catch (err) {
+            console.log('Webcam not available:', err.message);
+        }
+    }
+
+    // ── Save user login info to localStorage ──
+    async function storeUserInfo() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramUserId = urlParams.get('user_id');
+        const userId = paramUserId || '{{ user_id }}';
+        
+        if (userId && userId !== 'anonymous') {
+            try {
+                const response = await fetch(`/api/user/${userId}`);
+                const data = await response.json();
+                if (data && data.user) {
+                    localStorage.setItem('loggedInUserId', data.user.id);
+                    localStorage.setItem('loggedInUserName', data.user.name);
+                    localStorage.setItem('loggedInUserEmail', data.user.email);
+                    showNotification(`Logged in as ${data.user.name}`, 'info');
+                }
+            } catch (err) {
+                console.error('Error fetching user info:', err);
+            }
+        }
+    }
+
+    // Init
+    initWebcam();
+    storeUserInfo();
+</script>
+{% endblock %}

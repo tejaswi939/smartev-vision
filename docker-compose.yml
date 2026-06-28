@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sev
+      POSTGRES_PASSWORD: sev
+      POSTGRES_DB: smartev
+    ports: ["5544:5432"]   # host 5544 -> container 5432 (avoids native Postgres on 5432)
+    volumes: ["sev_pgdata:/var/lib/postgresql/data"]
+  ml:
+    build: ./services/ml
+    restart: unless-stopped
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  sev_pgdata:

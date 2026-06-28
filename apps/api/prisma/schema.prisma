@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ANALYST
+  CUSTOMER
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  HATCHBACK
+  TRUCK
+  SPORTS
+}
+
+enum PartCategory {
+  EXTERIOR
+  INTERIOR
+  WHEELS
+  LIGHTING
+  BATTERY
+  INFOTAINMENT
+  DOORS
+  MIRRORS
+  CHARGING
+  GLASS
+  SEATING
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum InteractionType {
+  HOVER
+  FOCUS
+  CLICK
+  OPEN
+  ROTATE
+  ZOOM
+  ENTER
+  EXIT
+  SWITCH
+}
+
+enum ReportType {
+  PDF
+  EXCEL
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  REGISTER
+  PASSWORD_RESET
+  ROLE_CHANGE
+  VEHICLE_CREATE
+  VEHICLE_UPDATE
+  VEHICLE_DELETE
+  REPORT_GENERATE
+  DATA_EXPORT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(CUSTOMER)
+  age          Int?
+  gender       String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  sessions     Session[]
+  feedback     Feedback[]
+  ratings      Rating[]
+  reports      Report[]
+  auditLogs    AuditLog[]
+  resetTokens  PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Vehicle {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  name         String
+  make         String
+  modelName    String
+  year         Int
+  type         VehicleType
+  batteryKwh   Float
+  rangeKm      Int
+  priceUsd     Int
+  modelUrl     String?
+  thumbnailUrl String?
+  description  String?
+  category     String?
+  metadata     Json?
+  isPublished  Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  parts        VehiclePart[]
+  sessions     Session[]
+  feedback     Feedback[]
+  ratings      Rating[]
+  recommendedIn Prediction[]
+}
+
+model VehiclePart {
+  id           String           @id @default(cuid())
+  vehicleId    String
+  name            String
+  category        PartCategory
+  meshName        String
+  description     String?
+  specs           Json?
+  hotspotPosition Json?
+  animation       String?
+  interactive     Boolean          @default(true)
+  displayOrder    Int              @default(0)
+  vehicle      Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  gaze         GazeData[]
+  interactions InteractionLog[]
+  heatmap      HeatmapCell[]
+  ratings      Rating[]
+
+  @@index([vehicleId])
+}
+
+model Session {
+  id              String             @id @default(cuid())
+  userId          String?
+  vehicleId       String
+  startedAt       DateTime           @default(now())
+  endedAt         DateTime?
+  durationSec     Float?
+  device          String             @default("web")
+  status          SessionStatus      @default(ACTIVE)
+  engagementScore Float?
+  interestScore   Float?
+  totalGazeMs     Float?
+  gazeProvider    String?
+  createdAt       DateTime           @default(now())
+  user            User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle         Vehicle            @relation(fields: [vehicleId], references: [id])
+  gaze            GazeData[]
+  interactions    InteractionLog[]
+  heatmap         HeatmapCell[]
+  emotions        EmotionDetection[]
+  feedback        Feedback[]
+  reports         Report[]
+  componentViews  ComponentView[]
+  prediction      Prediction?
+
+  @@index([userId])
+  @@index([vehicleId])
+  @@index([startedAt])
+}
+
+model GazeData {
+  id        String       @id @default(cuid())
+  sessionId String
+  partId    String?
+  objectId  String?
+  tMs       Float
+  x         Float
+  y         Float
+  depth     Float?
+  camPos    Json?
+  camRot    Json?
+  rayDir    Json?
+  provider  String?
+  createdAt DateTime     @default(now())
+  session   Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  part      VehiclePart? @relation(fields: [partId], references: [id])
+
+  @@index([sessionId])
+  @@index([sessionId, tMs])
+  @@index([objectId])
+}
+
+model InteractionLog {
+  id        String          @id @default(cuid())
+  sessionId String
+  partId    String?
+  type      InteractionType
+  tMs       Float
+  metadata  Json?
+  createdAt DateTime        @default(now())
+  session   Session         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  part      VehiclePart?    @relation(fields: [partId], references: [id])
+
+  @@index([sessionId])
+}
+
+model HeatmapCell {
+  id        String       @id @default(cuid())
+  sessionId String
+  vehicleId String?
+  partId    String?
+  x         Float
+  y         Float
+  intensity Float
+  weight    Float?
+  session   Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  part      VehiclePart? @relation(fields: [partId], references: [id])
+
+  @@index([sessionId])
+  @@index([vehicleId])
+}
+
+model ComponentView {
+  id               String   @id @default(cuid())
+  sessionId        String
+  vehicleId        String
+  partId           String?
+  meshName         String
+  totalViewMs      Float    @default(0)
+  hoverMs          Float    @default(0)
+  focusCount       Int      @default(0)
+  entryCount       Int      @default(0)
+  exitCount        Int      @default(0)
+  interactionCount Int      @default(0)
+  firstSeenMs      Float?
+  lastSeenMs       Float?
+  updatedAt        DateTime @updatedAt
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, meshName])
+  @@index([vehicleId, meshName])
+  @@index([sessionId])
+}
+
+model EmotionDetection {
+  id         String   @id @default(cuid())
+  sessionId  String
+  tMs        Float
+  emotion    String
+  confidence Float
+  createdAt  DateTime @default(now())
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model Feedback {
+  id              String   @id @default(cuid())
+  userId          String
+  vehicleId       String
+  sessionId       String?
+  comment         String?
+  favoriteFeature String?
+  suggestion      String?
+  sentiment       String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  session         Session? @relation(fields: [sessionId], references: [id])
+
+  @@index([vehicleId])
+}
+
+model Rating {
+  id        String       @id @default(cuid())
+  userId    String
+  vehicleId String
+  partId    String?
+  score     Int
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle      @relation(fields: [vehicleId], references: [id])
+  part      VehiclePart? @relation(fields: [partId], references: [id])
+
+  @@index([vehicleId])
+}
+
+model Report {
+  id            String     @id @default(cuid())
+  generatedById String
+  sessionId     String?
+  type          ReportType
+  scope         String
+  fileUrl       String
+  createdAt     DateTime   @default(now())
+  generatedBy   User       @relation(fields: [generatedById], references: [id])
+  session       Session?   @relation(fields: [sessionId], references: [id])
+
+  @@index([generatedById])
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  actorUserId String?
+  action      AuditAction
+  entityType  String?
+  entityId    String?
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+  actor       User?       @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([createdAt])
+}
+
+model Prediction {
+  id                   String   @id @default(cuid())
+  sessionId            String   @unique
+  archetype            String
+  archetypeConfidence  Float
+  interestTier         String
+  interestConfidence   Float
+  recommendedVehicleId String?
+  scores               Json
+  modelVersion         String
+  highlightComponents  String[] @default([])
+  rationale            String?
+  createdAt            DateTime @default(now())
+  session              Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  recommendedVehicle   Vehicle? @relation(fields: [recommendedVehicleId], references: [id])
+}

@@ -1,0 +1,24 @@
+{
+  "name": "smartev-vision",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.12.0",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "db:migrate": "dotenv -e .env -- pnpm --filter @sev/api exec prisma migrate dev",
+    "db:deploy": "dotenv -e .env -- pnpm --filter @sev/api exec prisma migrate deploy",
+    "db:seed": "dotenv -e .env -- pnpm --filter @sev/api exec tsx prisma/seed.ts",
+    "db:studio": "dotenv -e .env -- pnpm --filter @sev/api exec prisma studio",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "ml:train": "cd services/ml && python -m app.train"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.1",
+    "prettier": "^3.3.3",
+    "dotenv-cli": "^7.4.2"
+  }
+}

@@ -1,0 +1,70 @@
+# Render Blueprint — provisions the entire SmartEV Vision stack in one shot.
+#
+#   Deploy:  push this repo, then in Render →  New → Blueprint →  pick this repo →  Apply.
+#   Render's preview validates the file; adjust there if your account uses different field names.
+#
+# All resources share one region so they reach each other over Render's PRIVATE network
+# (the browser only ever talks to sev-web; the SPA's /api calls are proxied to the api by nginx,
+# so cookies stay same-origin — no CORS / cross-site-cookie issues). Change `region` on ALL four
+# together if you want a closer location.
+
+databases:
+  - name: sev-db
+    databaseName: smartev
+    user: sev
+    plan: free
+    region: oregon
+
+services:
+  # ── Python ML service (FastAPI + scikit-learn). Trains at build, serves on $PORT. ──
+  - type: web
+    name: sev-ml
+    runtime: docker
+    rootDir: services/ml
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+
+  # ── API (Node · Express · Prisma). Runs `prisma migrate deploy` on every boot. ──
+  - type: web
+    name: sev-api
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: "4000"          # the port Render routes to
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sev-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true     # Render generates a strong secret
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ML_SERVICE_URL      # internal "host:port"; the api prepends http:// automatically
+        fromService:
+          type: web
+          name: sev-ml
+          property: hostport
+
+  # ── Web (Vite SPA on nginx). Proxies /api → the api over the private network. ──
+  - type: web
+    name: sev-web
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerfilePath: apps/web/Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: API_UPSTREAM        # nginx proxy target: the api's internal host:port
+        fromService:
+          type: web
+          name: sev-api
+          property: hostport

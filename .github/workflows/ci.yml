@@ -1,0 +1,44 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: sev, POSTGRES_PASSWORD: sev, POSTGRES_DB: smartev_test }
+        ports: ["5544:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sev" --health-interval 5s --health-timeout 5s --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @sev/api exec prisma generate
+      - run: pnpm --filter @sev/api exec prisma migrate deploy
+        env: { DATABASE_URL: "postgresql://sev:sev@localhost:5544/smartev_test?schema=public" }
+      - run: pnpm -r typecheck
+      - run: pnpm -r lint
+      - run: pnpm -r test
+      - run: pnpm --filter @sev/web build
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r services/ml/requirements.txt ruff
+      - run: ruff check services/ml
+      - run: cd services/ml && pytest -q
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: node
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t sev-api -f apps/api/Dockerfile .
+      - run: docker build -t sev-web -f apps/web/Dockerfile .
+      - run: docker build -t sev-ml services/ml
